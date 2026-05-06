@@ -11,6 +11,15 @@ struct CalcResponse{
     result:f64,
 }
 
+#[derive(Deserialize)]
+struct GradeRequest{
+    mark:f64,
+}
+#[derive(Serialize)]
+struct GradeResponse{
+    grade:String,
+}
+
 async fn calculate(req: web::Json<CalcRequest>)-> impl Responder{
     let result = match req.operator.as_str(){
         "+"=>req.num1 + req.num2,
@@ -27,11 +36,25 @@ async fn calculate(req: web::Json<CalcRequest>)-> impl Responder{
     HttpResponse::Ok().json(CalcResponse{result})
 }
 
+async fn grade(req: web::Json<GradeRequest>)-> impl Responder{
+    if req.mark>90.0 {
+        return HttpResponse::Ok().json(GradeResponse{grade:"A".to_string()})
+    }
+    else if req.mark>80.0    {
+        return HttpResponse::Ok().json(GradeResponse{grade:"B".to_string()})
+    }
+    else{
+        return HttpResponse::Ok().json(GradeResponse{grade:"C".to_string()})
+    }
+}
+
 #[actix_web::main]
 async fn main()->std::io::Result<()>{
     println!("Server running at http://127.0.0.1:8080");
     HttpServer::new(||{
-        App::new().route("/calculate",web::post().to(calculate))
+        App::new()
+        .route("/calculate",web::post().to(calculate))
+        .route("/grade",web::post().to(grade))
     })
     .bind(("127.0.0.1",8080))?
     .run()
